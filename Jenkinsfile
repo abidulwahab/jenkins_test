@@ -8,8 +8,9 @@ pipeline {
     stages{
         stage('Checkout SCM'){
             steps{
-                script{
+                script{dir('terraform'){
                     checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/abidulwahab/jenkins_test.git']])
+                }
                 }
             }
         }
@@ -17,7 +18,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'pwd;cd terraform/ ;terraform init'
+                         sh 'terraform init'
                     }
                 }
             }
@@ -26,7 +27,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'pwd;cd terraform/ ;terraform validate'
+                         sh 'terraform validate'
                     }
                 }
             }
@@ -35,7 +36,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'pwd;cd terraform/ ;terraform plan'
+                         sh 'terraform plan'
                     }
                     input(message: "Approve?", ok: "proceed")
                 }
@@ -45,7 +46,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'pwd;cd terraform/ ;terraform $action --auto-approve'
+                         sh 'terraform $action --auto-approve'
                     }
                 }
             }
