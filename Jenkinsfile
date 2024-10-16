@@ -1,54 +1,54 @@
 pipeline {
-
-    parameters {
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-    } 
+    agent any
     environment {
-        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        AWS_DEFAULT_REGION = 'eu-west-2'
     }
-
-   agent  any
-    stages {
-        stage('checkout') {
-            steps {
-                 script{
-                        dir("terraform")
-                        {
-                            git "https://github.com/abidulwahab/jenkins_test.git"
-                        }
+    stages{
+        stage('Checkout SCM'){
+            steps{
+                script{
+                    checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/abidulwahab/jenkins_test.git']])
+                }
+            }
+        }
+        stage('Initializing Terraform'){
+            steps{
+                script{
+                    dir('terraform'){
+                         sh 'terraform init'
                     }
                 }
             }
-
-        stage('Plan') {
-            steps {
-                sh 'pwd;cd terraform/ ; terraform init'
-                sh "pwd;cd terraform/ ; terraform plan -out tfplan"
-                sh 'pwd;cd terraform/ ; terraform show -no-color tfplan > tfplan.txt'
+        }
+        stage('Validating Terraform'){
+            steps{
+                script{
+                    dir('terraform'){
+                         sh 'terraform validate'
+                    }
+                }
             }
         }
-        stage('Approval') {
-           when {
-               not {
-                   equals expected: true, actual: params.autoApprove
-               }
-           }
-
-           steps {
-               script {
-                    def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-               }
-           }
-       }
-
-        stage('Apply') {
-            steps {
-                sh "pwd;cd terraform/ ; terraform apply -input=false tfplan"
+        stage('Previewing the infrastructure'){
+            steps{
+                script{
+                    dir('terraform'){
+                         sh 'terraform plan'
+                    }
+                    input(message: "Approve?", ok: "proceed")
+                }
+            }
+        }
+        stage('Create/Destroy an EKS cluster'){
+            steps{
+                script{
+                    dir('terraform'){
+                         sh 'terraform $action --auto-approve'
+                    }
+                }
             }
         }
     }
-
-  }
+}
