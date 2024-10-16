@@ -17,7 +17,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform init'
+                         sh 'pwd;cd terraform/ ;terraform init'
                     }
                 }
             }
@@ -26,7 +26,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform validate'
+                         sh 'pwd;cd terraform/ ;terraform validate'
                     }
                 }
             }
@@ -35,7 +35,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform plan'
+                         sh 'pwd;cd terraform/ ;terraform plan'
                     }
                     input(message: "Approve?", ok: "proceed")
                 }
@@ -45,7 +45,7 @@ pipeline {
             steps{
                 script{
                     dir('terraform'){
-                         sh 'terraform $action --auto-approve'
+                         sh 'pwd;cd terraform/ ;terraform $action --auto-approve'
                     }
                 }
             }
